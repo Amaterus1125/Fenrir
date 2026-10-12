@@ -109,4 +109,14 @@ verified_unlinked,
 sample_verify_ok,
     })
 }
+/// Recursively erase every regular file under a directory, then remove the now-empty directory tree. Symlinks are unlinked, never followed, same escape-prevention instinct as the PM's symlink_escapes_prefix check.
 
+pub fn erase_folder(root: &Path, pattern: ErasePattern) -> Result<Vec<EraseReport>, String> {
+ if !root.is_dir() {
+return Err(format!("{:?} is not a directory", root));
+ }
+ let mut reports = Vec::new();
+ erase_folder_recursive(root, pattern, &mut reports)?;
+ fs::remove_dir_all(root).map_err(|e| format!("Files erased but directory removal failed: {}", e))?;
+ Ok(reports)
+}
