@@ -16,4 +16,12 @@ Dod3Pass,
 /// NIST 800-88 purge: single random pass. Honest default for SSDs.
  Nist1Pass,
 }
+pub struct EraseReport {
+  pub path: PathBuf,
+  pub size_bytes: u64,
+  pub passes: u32,
+  pub pattern: String,
+  pub verified_unlinked: bool,
+ pub sample_verify_ok: bool,
+}
 
