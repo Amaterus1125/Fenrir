@@ -4,3 +4,15 @@
 // Every pass is followed by fsync. After the final pass the file is unlinked, then we verify: (a) the path no longer resolves, and (b) for the overwrite itself, we re-open the file *during* the last pass and
 // read back a sample of sectors to confirm the on-disk bytes are what we just wrote, not stale original data (catches silent write failures/COW filesystems that didn't actually overwrite in place).
 
+use rand::RngCore;
+use std::fs::{self, File, OpenOptions};
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::{Path, PathBuf};
+
+#[derive(Clone, Copy, Debug)]
+pub enum ErasePattern {
+/// DoD 5220.22-M short: zeros, ones, random. 3 passes.
+Dod3Pass,
+/// NIST 800-88 purge: single random pass. Honest default for SSDs.
+ Nist1Pass,
+}
