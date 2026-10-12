@@ -74,3 +74,39 @@ return Ok(false);
 }}
     Ok(true)
 }
+
+
+/// Securely erase a single file: overwrite passes, fsync, unlink, verify.
+pub fn erase_file(path: &Path, pattern: ErasePattern) -> Result<EraseReport, String> {
+let meta = fs::metadata(path).map_err(|e| format!("Cannot stat {:?}: {}", path, e))?;
+if !meta.is_file() {
+return Err(format!("{:?} is not a regular file", path));
+  }
+let size = meta.len();
+ let mut f = OpenOptions::new()
+.write(true)
+.open(path)
+.map_err(|e| format!("Cannot open {:?} for overwrite: {}", path, e))?;
+
+    let (passes, pattern_name): (Vec<PassKind>, &str) = match pattern {
+ErasePattern::Dod3Pass => (vec![PassKind::Zeros, PassKind::Ones, PassKind::Random], "DoD 5220.22-M (3-pass)"),
+ErasePattern::Nist1Pass => (vec![PassKind::Random], "NIST 800-88 purge (1-pass random)"),
+    };
+  for p in &passes {
+overwrite_pass(&mut f, size, *p)?;
+    }
+drop(f);
+let sample_verify_ok = sample_verify_random_pass(path, size).unwrap_or(false);
+fs::remove_file(path).map_err(|e| format!("Overwrite succeeded but delete failed for {:?}: {}", path, e))?;
+let verified_unlinked = !path.exists();
+
+Ok(EraseReport {
+path: path.to_path_buf(),
+size_bytes: size,
+passes: passes.len() as u32,
+pattern: pattern_name.to_string(),
+verified_unlinked,
+sample_verify_ok,
+    })
+}
+
