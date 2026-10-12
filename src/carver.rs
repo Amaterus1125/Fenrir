@@ -76,3 +76,12 @@ search_from = end.max(start + 1);
   }}
  Ok(hits)
 }
+
+/// Carve directly from a file/device path (loopback image, disk image, etc.) without assuming it fits comfortably in RAM in the general case. For the hackathon scope this reads the whole file — real drives would
+/// need windowed/chunked scanning with overlap handling at chunk boundaries; that's exactly the kind of thing the roadmap slide should call out rather than silently pretend is handled.
+pub fn carve_file_streaming(path: &Path, out_dir: &Path) -> Result<Vec<CarveHit>, String> {
+    let mut f = File::open(path).map_err(|e| format!("Cannot open {:?}: {}", path, e))?;
+    let mut data = Vec::new();
+    f.read_to_end(&mut data).map_err(|e| format!("Cannot read {:?}: {}", path, e))?;
+    carve_buffer(&data, out_dir)
+}
