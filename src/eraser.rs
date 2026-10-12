@@ -53,4 +53,24 @@ enum PassKind {
 
 /// Read back up to `sample_count` random 4KB sectors and confirm they are NOT all-zero-garbage-from-a-failed-write and DO match the pattern we
 /// expect from the final pass (random data — so we just confirm the bytes aren't trivially predictable / all-same-byte, which would indicate the write silently no-op'd).
-
+fn sample_verify_random_pass(path: &Path, size: u64) -> Result<bool, String> {
+    if size == 0 {
+        return Ok(true);
+    }
+let mut f = File::open(path).map_err(|e| format!("Cannot reopen for verify: {}", e))?;
+let sector = 4096usize.min(size as usize).max(1);
+let mut rng = rand::thread_rng();
+let samples = 8usize.min(((size / sector as u64).max(1)) as usize);
+for _ in 0..samples {
+let max_offset = size.saturating_sub(sector as u64);
+let offset = if max_offset == 0 { 0 } else { rng.next_u64() % max_offset };
+f.seek(SeekFrom::Start(offset)).map_err(|e| e.to_string())?;
+let mut buf = vec![0u8; sector];
+f.read_exact(&mut buf).map_err(|e| format!("Verify read failed: {}", e))?;
+let all_same = buf.iter().all(|&b| b == buf[0]);
+if all_same {
+// A truly random pass landing on an all-identical 4KB sector is astronomically unlikely — treat it as a signal the overwrite didn't actually land (e.g. copy-on-write filesystem gave us a fresh block instead of overwriting in place).
+return Ok(false);
+}}
+    Ok(true)
+}
