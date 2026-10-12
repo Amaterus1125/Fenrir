@@ -44,3 +44,13 @@ fn overwrite_pass(file: &mut File, size: u64, pass_kind: PassKind) -> Result<(),
  file.sync_all().map_err(|e| format!("fsync failed after pass: {}", e))?;
     Ok(())
 }
+#[derive(Clone, Copy)]
+enum PassKind {
+    Zeros,
+    Ones,
+    Random,
+}
+
+/// Read back up to `sample_count` random 4KB sectors and confirm they are NOT all-zero-garbage-from-a-failed-write and DO match the pattern we
+/// expect from the final pass (random data — so we just confirm the bytes aren't trivially predictable / all-same-byte, which would indicate the write silently no-op'd).
+
