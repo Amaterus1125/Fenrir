@@ -6,9 +6,9 @@ mod eraser;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-/// Chiral Forensics — secure erase, signature-based carving, and a
+/// FENRIR - secure erase, signature-based carving, and a
 /// tamper-evident audit log, built on the same checksum/atomic-write
-/// primitives as the Chiral package manager.
+/// primitives as the Chiral package manager (inspired from it) 
 #[derive(Parser)]
 #[command(name = "cforensics", version, about)]
 struct Cli {
@@ -25,7 +25,7 @@ enum Commands {
     /// Securely erase a file: multi-pass overwrite + delete + verify.
     Erase {
         path: PathBuf,
-        /// Use NIST 800-88 single-pass (default: DoD 5220.22-M 3-pass).
+        /// Use NIST 800-88 single-pass as required yk 
         #[arg(long)]
         nist: bool,
     },
@@ -35,7 +35,7 @@ enum Commands {
         #[arg(long)]
         nist: bool,
     },
-    /// Demo whole-device erase against a loopback image (safe, no real disk touched).
+    /// Demo whole-device erase against a loopback image for safety as i am very scared person 
     DriveEraseDemo {
         /// Path to a loopback image file, e.g. ./demo.img
         image: PathBuf,
@@ -103,10 +103,7 @@ fn run_erase_folder(path: &PathBuf, nist: bool, log: &PathBuf) -> Result<(), Str
 }
 
 fn run_drive_erase_demo(image: &PathBuf, nist: bool, log: &PathBuf) -> Result<(), String> {
-    // Same code path as erase_file — the "drive eraser" is just erase_file
-    // pointed at a loopback image instead of a physical /dev/sdX node.
-    // That's the honest scope for a demo: real device-level erase needs
-    // root + raw block access, which is exactly what's on the roadmap slide.
+    // Same code path as erase_file — the "drive eraser" is just erase_file pointed at a loopback image instead of a physical /dev/sdX node. That's the honest scope for a demo: real device-level erase need root + raw block access, which is exactly what's on the roadmap slide.
     println!("⚠ Demo mode: erasing loopback image {:?}, not a physical device.", image);
     let report = eraser::erase_file(image, pattern_from_flag(nist))?;
     println!(
