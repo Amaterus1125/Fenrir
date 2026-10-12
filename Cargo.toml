@@ -1,0 +1,22 @@
+[package]
+name = "chiral-forensics"
+version = "0.1.0"
+edition = "2021"
+authors = ["Kav"]
+description = "Secure erase, signature-based file carving, and tamper-evident audit logging — built on Chiral's atomic-write/checksum-verify pipeline"
+
+[[bin]]
+name = "cforensics"
+path = "src/main.rs"
+
+[dependencies]
+sha2 = "=0.10.8"
+clap = { version = "=4.4.18", features = ["derive"] }
+rand = "=0.8.5"
+chrono = { version = "=0.4.31", features = ["clock"] }
+serde = { version = "=1.0.197", features = ["derive"] }
+serde_json = "=1.0.114"
+
+[profile.release]
+opt-level = 3
+lto = true
