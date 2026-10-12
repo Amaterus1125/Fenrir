@@ -40,3 +40,4 @@ fn find_from(haystack: &[u8], needle: &[u8], start: usize) -> Option<usize> {
   .position(|w| w == needle)
   .map(|p| p + start)
 }
+
