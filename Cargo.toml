@@ -1,9 +1,9 @@
 [package]
-name = "chiral-forensics"
+name = "FENRIR"
 version = "0.1.0"
 edition = "2021"
-authors = ["Kav"]
-description = "Secure erase, signature-based file carving, and tamper-evident audit logging — built on Chiral's atomic-write/checksum-verify pipeline"
+authors = ["CLOUD"]
+description = "Secure erase, signature-based file carving, and tamper-evident audit logging, built on Chiral's atomic write/checksum verify pipeline"
 
 [[bin]]
 name = "cforensics"
