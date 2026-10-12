@@ -120,3 +120,18 @@ return Err(format!("{:?} is not a directory", root));
  fs::remove_dir_all(root).map_err(|e| format!("Files erased but directory removal failed: {}", e))?;
  Ok(reports)
 }
+fn erase_folder_recursive(dir: &Path, pattern: ErasePattern, reports: &mut Vec<EraseReport>) -> Result<(), String> {
+ for entry in fs::read_dir(dir).map_err(|e| format!("Cannot read dir {:?}: {}", dir, e))? {
+let entry = entry.map_err(|e| e.to_string())?;
+let path = entry.path();
+let ftype = entry.file_type().map_err(|e| e.to_string())?;
+if ftype.is_symlink() {
+fs::remove_file(&path).map_err(|e| format!("Cannot unlink symlink {:?}: {}", path, e))?;
+} else if ftype.is_dir() {
+erase_folder_recursive(&path, pattern, reports)?;
+} else if ftype.is_file() {
+reports.push(erase_file(&path, pattern)?);
+}}
+    Ok(())
+}
+
