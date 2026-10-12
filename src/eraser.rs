@@ -16,3 +16,4 @@ Dod3Pass,
 /// NIST 800-88 purge: single random pass. Honest default for SSDs.
  Nist1Pass,
 }
+
