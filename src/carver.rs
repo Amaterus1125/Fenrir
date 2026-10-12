@@ -21,3 +21,22 @@ struct Signature {
  ext: &'static str,
  max_size: u64,
 }
+
+const SIGNATURES: &[Signature] = &[
+ Signature { kind: "jpg", header: &[0xFF, 0xD8, 0xFF], footer: Some(&[0xFF, 0xD9]), ext: "jpg", max_size: 64 * 1024 * 1024 },
+ Signature { kind: "png", header: &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], footer: Some(&[0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]), ext: "png", max_size: 64 * 1024 * 1024 },
+ Signature { kind: "pdf", header: &[0x25, 0x50, 0x44, 0x46], footer: Some(&[0x25, 0x25, 0x45, 0x4F, 0x46]), ext: "pdf", max_size: 128 * 1024 * 1024 },
+ // docx/xlsx/pptx are all ZIP containers andd PK\x03\x04 local file header.
+ // We carve to the ZIP end-of-central-directory marker 
+ Signature { kind: "docx/zip", header: &[0x50, 0x4B, 0x03, 0x04], footer: Some(&[0x50, 0x4B, 0x05, 0x06]), ext: "zip", max_size: 128 * 1024 * 1024 },
+];
+
+fn find_from(haystack: &[u8], needle: &[u8], start: usize) -> Option<usize> {
+  if needle.is_empty() || start >= haystack.len() {
+  return None;
+    }
+  haystack[start..]
+  .windows(needle.len())
+  .position(|w| w == needle)
+  .map(|p| p + start)
+}
