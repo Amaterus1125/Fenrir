@@ -40,4 +40,24 @@ fn find_from(haystack: &[u8], needle: &[u8], start: usize) -> Option<usize> {
   .position(|w| w == needle)
   .map(|p| p + start)
 }
+/// Carve a raw byte buffer already loaded in memory (used for small images/ tests). For anything disk-sized, use carve_file_streaming instead.
+pub fn carve_buffer(data: &[u8], out_dir: &Path) -> Result<Vec<CarveHit>, String> {
+    fs::create_dir_all(out_dir).map_err(|e| format!("Cannot create output dir: {}", e))?;
+    let mut hits = Vec::new();
+    let mut hit_counter = 0usize;
+
+    for sig in SIGNATURES {
+     let mut search_from = 0usize;
+      while let Some(start) = find_from(data, sig.header, search_from) {
+      let footer_search_start = start + sig.header.len();
+      let end = match sig.footer {
+      Some(f) => find_from(data, f, footer_search_start).map(|p| p + f.len()),
+     None => None,
+      };
+     let end = match end {
+    Some(e) => e.min(start + sig.max_size as usize),
+   None => (start + sig.max_size as usize).min(data.len()), // no footer found: cap-and-carve, marked truncated
+   };
+  let end = end.min(data.len());
+   let slice = &data[start..end];
 
