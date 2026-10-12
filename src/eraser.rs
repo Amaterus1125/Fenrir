@@ -25,3 +25,22 @@ pub struct EraseReport {
  pub sample_verify_ok: bool,
 }
 
+fn overwrite_pass(file: &mut File, size: u64, pass_kind: PassKind) -> Result<(), String> {
+    file.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+    let mut rng = rand::thread_rng();
+    const CHUNK: usize = 1 << 20; // 1 MiB
+    let mut buf = vec![0u8; CHUNK];
+    let mut remaining = size;
+    while remaining > 0 {
+    let this_chunk = CHUNK.min(remaining as usize);
+    match pass_kind {
+   PassKind::Zeros => buf[..this_chunk].fill(0x00),
+ PassKind::Ones => buf[..this_chunk].fill(0xFF),
+  PassKind::Random => rng.fill_bytes(&mut buf[..this_chunk]),
+   }
+  file.write_all(&buf[..this_chunk]).map_err(|e| format!("Overwrite write failed: {}", e))?;
+  remaining -= this_chunk as u64;
+  }
+ file.sync_all().map_err(|e| format!("fsync failed after pass: {}", e))?;
+    Ok(())
+}
