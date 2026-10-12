@@ -60,4 +60,19 @@ pub fn carve_buffer(data: &[u8], out_dir: &Path) -> Result<Vec<CarveHit>, String
    };
   let end = end.min(data.len());
    let slice = &data[start..end];
+ hit_counter += 1;
+  let out_name = format!("carved_{:04}_{}.{}", hit_counter, sig.kind.replace('/', "-"), sig.ext);
+ let out_path = out_dir.join(&out_name);
+  let mut f = File::create(&out_path).map_err(|e| format!("Cannot write {:?}: {}", out_path, e))?;
+   f.write_all(slice).map_err(|e| format!("Cannot write {:?}: {}", out_path, e))?;
+hits.push(CarveHit {
+  kind: sig.kind,
+   offset: start as u64,
+    size: slice.len() as u64,
+   output_path: out_path,
+   });
 
+search_from = end.max(start + 1);
+  }}
+ Ok(hits)
+}
